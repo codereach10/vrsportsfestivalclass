@@ -2,13 +2,14 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      school: "",
+      school: "4000037",
       schoolName: "",
-      content: "",
+      content: "1883",
       contentName: "",
-      score: "",
+      score: "10",
       videoName: "",
       error: "",
+      showSaveButton: false,
       isLoading: false,
       rankingCount: 0,
     };
@@ -16,13 +17,13 @@ class App extends React.Component {
 
   async componentDidMount() {
     const urlObj = new URL(window.location.href);
-    const queryString = urlObj.search.substring(1);
+    //const queryString = urlObj.search.substring(1);
 
-    const params = this.decrypt(queryString, this.props.secretKey);
+    //const params = this.decrypt(queryString, this.props.secretKey);
 
-    const school = new URLSearchParams(params).get("school");
-    const content = new URLSearchParams(params).get("content");
-    const score = new URLSearchParams(params).get("score");
+    const school = "4000037" ;//new URLSearchParams(params).get("school");
+    const content ="1883";  //new URLSearchParams(params).get("content");
+    const score = "10"; //new URLSearchParams(params).get("score");
 
     await this.getNamesByCodes(school, content);
     await this.getCount(school, content);
@@ -37,7 +38,7 @@ class App extends React.Component {
         #new-ranking {
           display: flex;
           flex-direction: column;
-          height: 100vh;
+          height: 140vh
         }
   
         .record-info {
@@ -72,6 +73,10 @@ class App extends React.Component {
           cursor: pointer;
           width: 120px;
           height: 42.66px;
+          min-width: 120px;
+          max-width: 120px;
+          min-height: 42.66px;
+          max-height: 42.66px;
           border: 1px solid #1D70F0;
           background-color: white;
           display: flex;
@@ -109,6 +114,10 @@ class App extends React.Component {
           cursor: pointer;
           width: 120px;
           height: 42.66px;
+          min-width: 120px;
+          max-width: 120px;
+          min-height: 42.66px;
+          max-height: 42.66px;
           border: none;
           background-color: #1D70F0;
           display: flex;
@@ -139,7 +148,7 @@ class App extends React.Component {
       this.wstyle = null;
     }
   }
-
+  /*
   uploadVideo = async (file) => {
     AWS.config.update({
       accessKeyId: this.props.awsAccessKeyId,
@@ -167,12 +176,35 @@ class App extends React.Component {
       alert("Upload failed. Check the console for more details.");
     }
   };
+  */
+  uploadVideo = async (file) => {
+    const currentDate = new Date().toISOString().replace(/[:.]/g, "-");
+    const videoFile = `${this.state.school}_${this.state.content}_${this.state.score}_${currentDate}`;
+    this.setState({ videoName: videoFile });
+    const formData = new FormData();
+    formData.append("video", file, videoFile + ".mp4"); // 또는 file.name 확장자 유지
 
+    try {
+      const response = await fetch("../../api/ranking/upload/", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error(response.status);
+
+      const result = await response.json();
+      console.log("Upload successful:", result.filePath);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Upload failed. Check the console for more details." + err);
+    }
+  };
   handleFileInputChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       this.setState({
         videoFile: file,
+        showSaveButton: true,
       });
     } else {
       alert("No file selected.");
@@ -189,7 +221,7 @@ class App extends React.Component {
 
     try {
       await this.uploadVideo(this.state.videoFile);
-
+      
       const response = await $.post("../../api/ranking/update/", {
         ranking_school_sc: this.state.school,
         ranking_ap_sn: this.state.content,
@@ -200,7 +232,7 @@ class App extends React.Component {
 
       if (responseData.code == 200) {
         window.location.href =
-          "http://vrsportsfestival.codereach.co.kr/ranking/finish";
+          "http://vrsportsfestival.vrsportsclass.com/ranking/finish";
       } else {
         alert("오류 발생");
       }
@@ -294,8 +326,8 @@ class App extends React.Component {
           <h3>{rankingCount}</h3>
         </div>
 
-        <h3 className="alert-ranking"> 랭킹전 진행 기간이 아닙니다. </h3>
-        {/* <input
+        {/*<h3 className="alert-ranking"> 랭킹전 진행 기간이 아닙니다. </h3>*/}
+        <input
           type="file"
           accept="video/*"
           style={{ display: "none" }}
@@ -319,13 +351,16 @@ class App extends React.Component {
         )}
 
         {error && <p className="error-message">{error}</p>}
-        <button
-          className="save-button"
-          onClick={this.saveRecord}
-          disabled={isLoading}
-        >
-          {isLoading ? "업로드 중..." : "저장"}
-        </button> */}
+        {!error && this.state.showSaveButton && (
+            <button
+              className="save-button"
+              onClick={this.saveRecord}
+              disabled={isLoading}
+            >
+              {isLoading ? "업로드 중..." : "저장"}
+            </button> 
+          )
+        }
       </div>
     );
   }

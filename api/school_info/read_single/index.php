@@ -27,15 +27,15 @@ $Rs = OpenRecordset($Rs, $sql);
 while ($Rs->NextRow()) {
     $data = array();
 
-    $data[school_pid] = $Rs->Col('school_pid');
-    $data[school_host] = $Rs->Col('school_host');
-    $data[school_sc_code] = $Rs->Col('school_sc_code');
-    $data[school_name] = $Rs->Col('school_name');
+    $data['school_pid'] = $Rs->Col('school_pid');
+    $data['school_host'] = $Rs->Col('school_host');
+    $data['school_sc_code'] = $Rs->Col('school_sc_code');
+    $data['school_name'] = $Rs->Col('school_name');
 
     array_push($school, $data);
 }
 
-$ret[school] = $school;
+$ret['school'] = $school;
 
 
 echo json_encode($ret);

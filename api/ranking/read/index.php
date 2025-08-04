@@ -16,7 +16,7 @@ $ranking = array();
 $school_content_counters = array(); // Initialize an array to hold counters for each school and content
 
 // Fetch all relevant data
-$sql = "SELECT r.ranking_school_sc, r.ranking_ap_sn, r.ranking_score AS score, r.ranking_video_name, r.seq, r.created_at, si.school_name, si.school_group, gi.ap_name
+$sql = "SELECT r.ranking_school_sc, r.ranking_ap_sn, r.ranking_score AS score, r.ranking_video_name, r.seq, r.created_at, r.status, si.school_name, si.school_group, gi.ap_name
         FROM ranking r
         LEFT JOIN school_info si ON r.ranking_school_sc = si.school_sc_code
         LEFT JOIN content_info gi ON r.ranking_ap_sn = gi.ap_sn
@@ -45,6 +45,7 @@ while ($Rs->NextRow()) {
         "school_name" => $Rs->Col("school_name"),
         "school_group" => $Rs->Col("school_group"),
         "ap_name" => $Rs->Col("ap_name"),
+        "status" => $Rs->Col("status"),
         "created_at" => $Rs->Col("created_at"),
        
     );

@@ -7,6 +7,7 @@ $HOME_DIR = "../";
 ?>
 
 <?php
+
 function parse_env($file_path) {
     $vars = [];
     $lines = file($file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -27,9 +28,9 @@ $env_file = __DIR__ . '/../config/.env';
 
 $env_vars = parse_env($env_file);
 
-$AWS_ACCESS_KEY_ID = isset($env_vars['AWS_ACCESS_KEY_ID ']) ? trim($env_vars['AWS_ACCESS_KEY_ID ']) : null;
-$AWS_SECRET_KEY = isset($env_vars['AWS_SECRET_KEY ']) ? trim($env_vars['AWS_SECRET_KEY ']) : null;
-$AWS_REGION = isset($env_vars['AWS_REGION ']) ? trim($env_vars['AWS_REGION ']) : null;
+//$AWS_ACCESS_KEY_ID = isset($env_vars['AWS_ACCESS_KEY_ID ']) ? trim($env_vars['AWS_ACCESS_KEY_ID ']) : null;
+//$AWS_SECRET_KEY = isset($env_vars['AWS_SECRET_KEY ']) ? trim($env_vars['AWS_SECRET_KEY ']) : null;
+//$AWS_REGION = isset($env_vars['AWS_REGION ']) ? trim($env_vars['AWS_REGION ']) : null;
 $SECRET_KEY = isset($env_vars['SECRET_KEY ']) ? trim($env_vars['SECRET_KEY ']) : null;
 
 
@@ -38,7 +39,7 @@ $SECRET_KEY = isset($env_vars['SECRET_KEY ']) ? trim($env_vars['SECRET_KEY ']) :
 
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kr">
 <head>
 	<meta charset="utf-8">
 	<link rel="icon" href="favicon.ico">
@@ -51,14 +52,14 @@ $SECRET_KEY = isset($env_vars['SECRET_KEY ']) ? trim($env_vars['SECRET_KEY ']) :
 	<script type="text/javascript" src="../../inc/react-dom-15.6.1.min.js"></script>
 	<script type="text/javascript" src="../../inc/gsap.min.js"></script>
 	<script type="text/javascript" src="../../inc/wstyle-0.3.1.js"></script>
-	<script type="text/javascript" src="../../inc/aws-sdk-2.1654.0.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<!--script type="text/javascript" src="../../inc/aws-sdk-2.1654.0.min.js"></script-->
+	<!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script-->
 	<script>
 
 		
-  const AWS_ACCESS_KEY_ID = "<?php echo htmlspecialchars($AWS_ACCESS_KEY_ID); ?>";
-  const AWS_SECRET_KEY = "<?php echo htmlspecialchars($AWS_SECRET_KEY); ?>";
-  const AWS_REGION = "<?php echo htmlspecialchars($AWS_REGION); ?>";
+  //const AWS_ACCESS_KEY_ID = "<?php //echo htmlspecialchars($AWS_ACCESS_KEY_ID); ?>";
+  //const AWS_SECRET_KEY = "<?php //echo htmlspecialchars($AWS_SECRET_KEY); ?>";
+  //const AWS_REGION = "<?php //!echo htmlspecialchars($AWS_REGION); ?>";
   const SECRET_KEY = "<?php echo htmlspecialchars($SECRET_KEY); ?>";
 
 </script>
@@ -115,8 +116,11 @@ $SECRET_KEY = isset($env_vars['SECRET_KEY ']) ? trim($env_vars['SECRET_KEY ']) :
 
 
 <script type="text/babel">
-		ReactDOM.render(<App awsAccessKeyId={AWS_ACCESS_KEY_ID}
-                awsSecretKey={AWS_SECRET_KEY}
-                awsRegion={AWS_REGION} secretKey={SECRET_KEY}/>, document.getElementById('root'));
+		ReactDOM.render(<App 
+				//awsAccessKeyId={AWS_ACCESS_KEY_ID}
+                //awsSecretKey={AWS_SECRET_KEY}
+                //awsRegion={AWS_REGION} 
+				secretKey={SECRET_KEY}/>
+				, document.getElementById('root'));
 	</script>
 </html>

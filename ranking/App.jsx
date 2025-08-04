@@ -19,6 +19,9 @@ class App extends React.Component {
       deletingSeq: null,
       updateDate: null,
       regCount: {},
+      // Add pagination state
+      currentPage: 1, // Current page number
+      itemsPerPage: 20, // Number of items to display per page
     };
   }
 
@@ -217,7 +220,7 @@ class App extends React.Component {
 
       .ranking-record.admin {
         display: grid;
-        grid-template-columns: 60px 250px 100px 100px 300px auto; 
+        grid-template-columns: 60px 250px 100px 100px 300px 100px auto; 
       }
 
       .ranking-record.more {
@@ -291,7 +294,7 @@ class App extends React.Component {
         transform: translate(-50%, -50%);
         background-color: white;
         padding: 20px;
-        border-radius: 5px;
+        border-radius: 5px;fod
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         z-index: 1000;
         text-align: center;
@@ -490,6 +493,41 @@ class App extends React.Component {
 
 
       }
+
+      .pagination {
+          display: flex;
+          list-style-type: none;
+      }
+      
+      .pagination-wrap {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          border-top: 1px solid rgba(177, 177, 177, 0.10);
+    
+      }
+      
+      .pagination li {
+          width: 20px;
+          height: 20px;
+          background: #D7E5FA;
+          color: #0B5CD5;
+          text-align: center;
+         border-radius: 8px;
+          padding: 4px;
+          margin: 2px;
+          cursor: pointer;
+      }
+      .pagination li:hover {
+        background-color: #0B5CD5;
+        color: #FFFFFF;
+      }
+      
+      
+      .pagination li.activePage {
+          background-color: #0B5CD5;
+          color: #FFFFFF;
+      }
     `);
   }
 
@@ -661,7 +699,7 @@ class App extends React.Component {
   };
 
   handleApSelection = (apName) => {
-    this.setState({ selectedApName: apName });
+    this.setState({ selectedApName: apName, currentPage: 1 });
     localStorage.setItem("rankingMenu", apName);
   };
 
@@ -798,9 +836,8 @@ class App extends React.Component {
   };
 
   handleGroupSelection = (group) => {
-    this.setState({ selectedGroup: group });
+    this.setState({ selectedGroup: group, currentPage:1 });
   };
-
   updateRanking = () => {
     $.ajax({
       type: "GET",
@@ -822,7 +859,7 @@ class App extends React.Component {
     this.updateRanking();
     this.setState({ showRankingUpdateConfirmation: false });
   };
-
+  /*
   downloadVideo = async (videoKey) => {
     AWS.config.update({
       accessKeyId: this.props.awsAccessKeyId,
@@ -855,6 +892,54 @@ class App extends React.Component {
       alert("비디오가 존재하지 않습니다");
     }
   };
+  */
+
+  downloadVideo = async (videoFileName) => {
+    try {
+      // 서버 내 업로드 경로: /uploads 폴더에 저장
+      const url = '/uploads/'+videoFileName+'.mp4';
+
+      // 다운로드 링크 생성 및 클릭
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = videoFileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log("Download started");
+    } catch (err) {
+      console.error("Download error:", err);
+      alert("비디오가 존재하지 않습니다");
+    }
+  };
+  // Add handlePageChange method
+  handlePageChange = (pageNumber) => {
+    this.setState({ currentPage: pageNumber });
+  };
+
+  Pagination = ({ currentPage, pageSize, totalElements, onPageChange }) => {
+    const totalPages = Math.ceil(totalElements / pageSize);
+    const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+    if (totalPages <= 1) return null; // 1페이지일 때 출력 안함 
+
+    return (
+      <div className="pagination-wrap">
+        <ul className="pagination">
+          {pageNumbers.map((number) => (
+            <li
+              key={number}
+              className={currentPage === number ? "activePage" : null}
+              onClick={() => onPageChange(number)}
+            >
+              {number}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   render() {
     const {
@@ -872,6 +957,8 @@ class App extends React.Component {
       isEdit,
       isMore,
       regCount,
+      currentPage, // Get currentPage from state
+      itemsPerPage, // Get itemsPerPage from state
     } = this.state;
 
     const isAdmin = this.props.path == "/ranking/admin/";
@@ -879,6 +966,21 @@ class App extends React.Component {
     const apOrder = ["붐붐 베이스볼", "얼티밋러닝", "농구대잔치","대박터트리기"];
 
     const adminClass = isAdmin ? "admin" : "";
+
+    // Filter and paginate the ranking data
+    const filteredRanking = ranking[selectedApName]
+      ? ranking[selectedApName]
+        .filter(
+          (entry) =>
+            entry.school_group === selectedGroup &&
+            (!isAdmin ? entry.created_at < this.state.updateDate : true)
+        )
+      : [];
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredRanking.slice(indexOfFirstItem, indexOfLastItem);
+
     return (
       <div id="ranking-main">
         <div className="ranking-container">
@@ -998,9 +1100,12 @@ class App extends React.Component {
                         <div className="ranking-center">등록 횟수</div>
                       )}
                       <div className="ranking-center">등록 날짜</div>
+                      {isAdmin && isLogin && (
+                        <div>상태</div>
+                      )} 
                       <div></div>
                     </div>
-                    {ranking[selectedApName] &&
+                    {/*ranking[selectedApName] &&
                       ranking[selectedApName]
                         .filter(
                           (entry) =>
@@ -1008,8 +1113,8 @@ class App extends React.Component {
                             (!isAdmin
                               ? entry.created_at < this.state.updateDate
                               : true)
-                        )
-
+                        )*/
+                        currentItems
                         .map((value, index) => (
                           <div
                             key={index}
@@ -1028,7 +1133,7 @@ class App extends React.Component {
                                   : "url(assets/ranking_list_front.png)",
                               }}
                             >
-                              {index + 1}
+                              {indexOfFirstItem + index + 1}
                             </div>
                             <div>{value.school_name}</div>
                             <div className="ranking-center">
@@ -1050,7 +1155,11 @@ class App extends React.Component {
                             <div className="ranking-center">
                               {value.created_at}
                             </div>
-
+                            {isAdmin && isLogin && (
+                              <div className="ranking-center">
+                                {value.status}
+                              </div>
+                            )}
                             <div className="buttons-wrapper">
                               {isAdmin && isLogin && (
                                 <button
@@ -1073,7 +1182,14 @@ class App extends React.Component {
               </div>
             </div>
           )}
+          <this.Pagination
+          currentPage={currentPage}
+          pageSize={itemsPerPage}
+          totalElements={filteredRanking.length} // Use the length of filtered data
+          onPageChange={this.handlePageChange}
+        />
         </div>
+        
         {showLoginPopup && (
           <div>
             <div

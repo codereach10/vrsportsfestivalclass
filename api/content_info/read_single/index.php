@@ -25,17 +25,17 @@ $Rs = OpenRecordset($Rs, $sql);
 
 while ($Rs->NextRow()) {
     $data = array();
-    $data[ap_sn] = $Rs->Col('ap_sn');
-    $data[parent_ap_sn] = $Rs->Col('parent_ap_sn');
-    $data[ap_name] = $Rs->Col('ap_name');
-    $data[ap_intro] = $Rs->Col('ap_intro');
-    $data[ap_guide] = $Rs->Col('ap_guide');
-    $data[ap_rule] = $Rs->Col('ap_rule');
+    $data['ap_sn'] = $Rs->Col('ap_sn');
+    $data['parent_ap_sn'] = $Rs->Col('parent_ap_sn');
+    $data['ap_name'] = $Rs->Col('ap_name');
+    $data['ap_intro'] = $Rs->Col('ap_intro');
+    $data['ap_guide'] = $Rs->Col('ap_guide');
+    $data['ap_rule'] = $Rs->Col('ap_rule');
 
     array_push($content, $data);
 }
 
-$ret[content] = $content;
+$ret['content'] = $content;
 
 
 echo json_encode($ret);

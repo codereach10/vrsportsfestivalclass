@@ -8,6 +8,7 @@ include $HOME_DIR . "_include/_session.php";
 ?>
 
 <?php
+/*
 function parse_env($file_path) {
     $vars = [];
     $lines = file($file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -23,8 +24,7 @@ function parse_env($file_path) {
     return $vars;
 }
 
-
-$env_file = __DIR__ . '/../config/.env';
+/$env_file = __DIR__ . '/../config/.env';
 
 $env_vars = parse_env($env_file);
 
@@ -32,31 +32,31 @@ $AWS_ACCESS_KEY_ID = isset($env_vars['AWS_ACCESS_KEY_ID ']) ? trim($env_vars['AW
 $AWS_SECRET_KEY = isset($env_vars['AWS_SECRET_KEY ']) ? trim($env_vars['AWS_SECRET_KEY ']) : null;
 $AWS_REGION = isset($env_vars['AWS_REGION ']) ? trim($env_vars['AWS_REGION ']) : null;
 
-
+*/
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kr">
 <head>
 	<meta charset="utf-8">
 	<link rel="icon" href="favicon.ico">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="#000000">
-	<title>VRSports 2024 Ranking</title>
+	<title>VRSports 2025 Ranking</title>
 	<script type="text/javascript" src="../../inc/jquery-1.11.0.min.js"></script>
 	<script type="text/javascript" src="../../inc/babel-7.0.0-beta.3.min.js"></script>
 	<script type="text/javascript" src="../../inc/react-15.6.2.min.js"></script>
 	<script type="text/javascript" src="../../inc/react-dom-15.6.1.min.js"></script>
 	<script type="text/javascript" src="../../inc/gsap.min.js"></script>
 	<script type="text/javascript" src="../../inc/wstyle-0.3.1.js"></script>
-	<script type="text/javascript" src="../../inc/aws-sdk-2.1654.0.min.js"></script>
+	<!--script type="text/javascript" src="../../inc/aws-sdk-2.1654.0.min.js"></script-->
 	<script type="text/babel" src="../App.jsx"></script>
 	
 	<script>
 
 		
-  const AWS_ACCESS_KEY_ID = "<?php echo htmlspecialchars($AWS_ACCESS_KEY_ID); ?>";
-  const AWS_SECRET_KEY = "<?php echo htmlspecialchars($AWS_SECRET_KEY); ?>";
-  const AWS_REGION = "<?php echo htmlspecialchars($AWS_REGION); ?>";
+  //const AWS_ACCESS_KEY_ID = "<?php echo htmlspecialchars($AWS_ACCESS_KEY_ID); ?>";
+  //const AWS_SECRET_KEY = "<?php echo htmlspecialchars($AWS_SECRET_KEY); ?>";
+  //const AWS_REGION = "<?php echo htmlspecialchars($AWS_REGION); ?>";
 
 
 </script>
@@ -116,14 +116,17 @@ $AWS_REGION = isset($env_vars['AWS_REGION ']) ? trim($env_vars['AWS_REGION ']) :
 	let startReactDOM = () => {
     
 	<?php if ($_ISLOGIN) { ?>
-	 ReactDOM.render(<App path ={path} isLoggedIn = {true} awsAccessKeyId={AWS_ACCESS_KEY_ID}
-                awsSecretKey={AWS_SECRET_KEY}
-                awsRegion={AWS_REGION}/>, document.getElementById('root'));
+	 //ReactDOM.render(<App path ={path} isLoggedIn = {true} awsAccessKeyId={AWS_ACCESS_KEY_ID}
+                //awsSecretKey={AWS_SECRET_KEY}
+                //awsRegion={AWS_REGION}/>, document.getElementById('root'));
+		ReactDOM.render(<App path ={path} isLoggedIn = {true} /> , document.getElementById('root'));	
     <?php } else { ?>
 		
-	ReactDOM.render(<App path ={path} isLoggedIn = {false} awsAccessKeyId={AWS_ACCESS_KEY_ID}
-                awsSecretKey={AWS_SECRET_KEY}
-                awsRegion={AWS_REGION}/>, document.getElementById('root'));
+	//ReactDOM.render(<App path ={path} isLoggedIn = {false} awsAccessKeyId={AWS_ACCESS_KEY_ID}
+                //awsSecretKey={AWS_SECRET_KEY}
+                //awsRegion={AWS_REGION}/>, document.getElementById('root'));
+		ReactDOM.render(<App path ={path} isLoggedIn = {false} />, document.getElementById('root'));		
+		
 	<?php
 	} ?>
   };
