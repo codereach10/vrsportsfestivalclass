@@ -2,11 +2,11 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      school: "4000037",
+      school: "", //"4000037",
       schoolName: "",
-      content: "1883",
+      content: "", //"1883",
       contentName: "",
-      score: "10",
+      score: "", //"10",
       videoName: "",
       error: "",
       showSaveButton: false,
@@ -14,16 +14,16 @@ class App extends React.Component {
       rankingCount: 0,
     };
   }
-
+  
   async componentDidMount() {
     const urlObj = new URL(window.location.href);
-    //const queryString = urlObj.search.substring(1);
+    const queryString = urlObj.search.substring(1);
 
-    //const params = this.decrypt(queryString, this.props.secretKey);
+    const params = this.decrypt(queryString, this.props.secretKey);
 
-    const school = "4000037" ;//new URLSearchParams(params).get("school");
-    const content ="1883";  //new URLSearchParams(params).get("content");
-    const score = "10"; //new URLSearchParams(params).get("score");
+    const school = new URLSearchParams(params).get("school"); //"4000037" ;
+    const content =  new URLSearchParams(params).get("content"); //"1883";
+    const score =  new URLSearchParams(params).get("score"); //"10";
 
     await this.getNamesByCodes(school, content);
     await this.getCount(school, content);
@@ -139,6 +139,14 @@ class App extends React.Component {
         text-align:center;
         color: #1D70F0;
         }
+        .alert-info {
+        text-align:center;
+        color: #060606ff;
+        }
+        .alert-weight {
+        text-align:center;
+        color: #d50808ff;
+        }
       `);
   }
 
@@ -179,38 +187,75 @@ class App extends React.Component {
   */
   uploadVideo = async (file) => {
     const currentDate = new Date().toISOString().replace(/[:.]/g, "-");
-    const videoFile = `${this.state.school}_${this.state.content}_${this.state.score}_${currentDate}`;
+    const ext = file.name.split('.').pop();
+    if(ext == '') {
+      ext='mov';
+    }
+    const videoFile = `${this.state.school}_${this.state.content}_${this.state.score}_${currentDate}`+ '.' + ext;
     this.setState({ videoName: videoFile });
     const formData = new FormData();
-    formData.append("video", file, videoFile + ".mp4"); // 또는 file.name 확장자 유지
-
+    
+    formData.append("video", file, videoFile); // 또는 file.name 확장자 유지
+    
     try {
       const response = await fetch("../../api/ranking/upload/", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error(response.status);
+      //if (!response.ok) throw new Error(response.status);
 
       const result = await response.json();
       console.log("Upload successful:", result.filePath);
+      if(result.error) {
+        return result.error;
+      }
+      return "";
+
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Upload failed. Check the console for more details." + err);
-    }
-  };
-  handleFileInputChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      this.setState({
-        videoFile: file,
-        showSaveButton: true,
-      });
-    } else {
-      alert("No file selected.");
+      this.setState({error:err});
+      const message = "알수 없는 에러가 발생하였습니다. 잠시 후 다시 시도해 주세요.\n" + err;
+      return message;
     }
   };
 
+  handleFileInputChange = (event) =>  {
+    
+    const file = event.target.files[0];
+    
+    if (file) {
+      const fileSizeInMB = file.size / 1024 / 1024;
+      const maxSizeMB = 500;
+
+      if(fileSizeInMB > maxSizeMB) {
+        alert("용량이 500MB를 초과하였습니다.\n업로드 가능 용량은 500MB입니다.");
+      } else {
+        this.setState({
+          videoFile: file,
+          showSaveButton: true,
+        });
+      }
+    } else {
+      alert("동영상을 선택하지 않았습니다.");
+    }
+    
+    
+  };
+  handleFileClear = (event) => {
+    this.setState({
+      videoFile: null,
+      showSaveButton: true,
+    });
+
+    // 파일 input 초기화 후 선택창 다시 열기
+    if (this.fileInputRef.current) {
+      this.fileInputRef.current.value = ""; // 수동 초기화
+      setTimeout(() => {
+        this.fileInputRef.current.click(); // 선택창 다시 띄움
+      }, 0); // 바로 띄우면 초기화보다 빨리 실행될 수 있어 0ms delay
+    }
+  };
   saveRecord = async () => {
     if (this.state.videoFile == null) {
       this.setState({ error: "동영상 업로드해주세요!" });
@@ -220,24 +265,25 @@ class App extends React.Component {
     this.setState({ isLoading: true });
 
     try {
-      await this.uploadVideo(this.state.videoFile);
-      
-      const response = await $.post("../../api/ranking/update/", {
-        ranking_school_sc: this.state.school,
-        ranking_ap_sn: this.state.content,
-        ranking_score: this.state.score,
-        ranking_video_name: this.state.videoName,
-      });
-      const responseData = JSON.parse(response);
-
-      if (responseData.code == 200) {
-        window.location.href =
-          "http://vrsportsfestival.vrsportsclass.com/ranking/finish";
+      const rst = await this.uploadVideo(this.state.videoFile);
+      if(rst) {
+        alert(rst);
       } else {
-        alert("오류 발생");
+        const response = await $.post("../../api/ranking/update/", {
+          ranking_school_sc: this.state.school,
+          ranking_ap_sn: this.state.content,
+          ranking_score: this.state.score,
+          ranking_video_name: this.state.videoName,
+        });
+        const responseData = JSON.parse(response);
+
+        if (responseData.code == 200 && !responseData.error) {
+          window.location.href =
+            "http://vrsportsfestival.vrsportsclass.com/ranking/finish";
+        } 
       }
     } catch (error) {
-      alert("오류 발생:" + error);
+      alert(error);
     } finally {
       this.setState({ isLoading: false });
     }
@@ -326,18 +372,32 @@ class App extends React.Component {
           <h3>{rankingCount}</h3>
         </div>
 
-        {/*<h3 className="alert-ranking"> 랭킹전 진행 기간이 아닙니다. </h3>*/}
+        <h3 className="alert-ranking"> 행사기간:8.25(월)~9.12(금)</h3>
         <input
           type="file"
           accept="video/*"
           style={{ display: "none" }}
+          ref="fileInputRef"
           onChange={this.handleFileInputChange}
           id="fileInput"
         />
+        {!this.state.showSaveButton && ( 
         <label htmlFor="fileInput" className="upload-button">
-          영상 업로드
+          영상 업로드 
         </label>
+        )}
+        {this.state.showSaveButton && ( 
 
+        <label htmlFor="fileInput" onClick={this.handleFileClear} className="upload-button">
+          다시 올리기
+        </label>
+        )}
+        {!this.state.showSaveButton && 
+          <div>
+            <p className="alert-info">랭킹전 경기참여 영상을 업로드해주세요.</p>
+            <p className="alert-weight"> *영상의 용량은 최대500MB까지 가능합니다.</p>
+          </div>
+        }
         {videoFile && (
           <div className="video-container">
             <video controls style={{ maxWidth: "100%", height: "auto" }}>

@@ -2,8 +2,10 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      all : {},
       ranking: {},
       schoolRanking: {},
+      pending: {},
       selectedApName: null,
       selectedSchoolName: null,
       selectedGroup: "A",
@@ -16,6 +18,8 @@ class App extends React.Component {
       isEdit: false,
       isMore: false,
       editingScores: {},
+      editingStatus: {}, 
+      activeTab : 'approved',
       deletingSeq: null,
       updateDate: null,
       regCount: {},
@@ -225,7 +229,7 @@ class App extends React.Component {
 
       .ranking-record.more {
        display: grid;
-       grid-template-columns: 250px 100px 300px auto;
+       grid-template-columns: 250px 100px 300px 100px auto;
       }
 
       .ranking-record-window {
@@ -528,6 +532,60 @@ class App extends React.Component {
           background-color: #0B5CD5;
           color: #FFFFFF;
       }
+
+      .edit-select {
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+
+      .status-success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-warning {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .status-default {
+        background-color: #f0f0f0;
+        color: #666;
+      }
+      
+      .tab-bar {
+          display: flex;
+          gap: 10px;
+          width: 100%;
+          justify-content: center;
+          margin-bottom: 10px;
+        }
+        .tab-bar button {
+          padding: 8px 12px;
+          border: 1px solid #ccc;
+          background: #f8f8f8;
+          cursor: pointer;
+        }
+        .tab-bar button.active {
+          background: #007bff;
+          color: white;
+        }
+        .approved-item {
+          background: #e7f5ff;
+          padding: 5px;
+          margin-bottom: 5px;
+        }
+        .pending-item {
+          background: #fff3cd;
+          padding: 5px;
+          margin-bottom: 5px;
+        }
     `);
   }
 
@@ -549,28 +607,45 @@ class App extends React.Component {
             this.setState({
               regCount: JSON.parse(data).count,
             });
+            let allData = {};
             let categorizedData = {};
             let schoolCategorizedData = {};
+            let pendingData = {};
+
 
             JSON.parse(data).ranking.forEach((entry) => {
               let ap_sn = entry.ranking_ap_sn;
               let school_sc = entry.ranking_school_sc;
 
+              if(!allData[ap_sn]) {
+                allData[ap_sn] = [];
+              }
+              allData[ap_sn].push(entry);
+
               if (!categorizedData[ap_sn]) {
                 categorizedData[ap_sn] = [];
               }
-              categorizedData[ap_sn].push(entry);
-
+              if(entry.status === '등록') {
+               categorizedData[ap_sn].push(entry);
+              }
               if (!schoolCategorizedData[school_sc]) {
                 schoolCategorizedData[school_sc] = [];
               }
+             
               schoolCategorizedData[school_sc].push(entry);
+              
+              if (!pendingData[ap_sn]) {
+                pendingData[ap_sn] = [];
+              }
+              if(entry.status !== '등록') {
+                pendingData[ap_sn].push(entry);
+              }
             });
 
             Object.keys(categorizedData).forEach((ap_sn) => {
               const result = [];
               const schoolScCounts = {};
-
+             
               categorizedData[ap_sn].forEach((entry) => {
                 const { ranking_school_sc, ranking_score, created_at } = entry;
                 const isTimeScore = /^\d+:\d+(.\d+)?$/.test(ranking_score);
@@ -621,6 +696,8 @@ class App extends React.Component {
                   result.push(entry);
                   schoolScCounts[ranking_school_sc]++;
                 }
+
+                
               });
 
               result.sort((a, b) => {
@@ -651,16 +728,25 @@ class App extends React.Component {
 
               categorizedData[ap_sn] = result;
             });
-
+            /*
             Object.keys(schoolCategorizedData).forEach((school_sc) => {
               schoolCategorizedData[school_sc].sort(
                 (a, b) => parseInt(b.ranking_score) - parseInt(a.ranking_score)
+              );
+            });
+            */
+
+             Object.keys(schoolCategorizedData).forEach((school_sc) => {
+              schoolCategorizedData[school_sc].sort(
+                (a, b) => parseInt(a.created_at) - parseInt(b.created_at)
               );
             });
 
             this.setState({
               ranking: categorizedData,
               schoolRanking: schoolCategorizedData,
+              pending: pendingData,
+              all : allData
             });
           } catch (error) {
             console.error("Error parsing response data!", error);
@@ -730,6 +816,7 @@ class App extends React.Component {
   handleEditToggle = () => {
     if (!this.state.isEdit) {
       const editingScores = {};
+      const editingStatus = {};
       if (this.state.schoolRanking[this.state.selectedSchoolName]) {
         this.state.schoolRanking[this.state.selectedSchoolName]
           .filter(
@@ -737,12 +824,14 @@ class App extends React.Component {
           )
           .forEach((value) => {
             editingScores[value.seq] = value.ranking_score;
+            editingStatus[value.seq] = value.status;
           });
       }
-      this.setState({ isEdit: true, editingScores });
-    } else {
+      this.setState({ isEdit: true, editingScores , editingStatus});
+    } else { 
       // Exiting edit mode
-      this.setState({ isEdit: false, editingScores: {} });
+      this.setState({ isEdit: false, editingScores: {} , editingStatus: {} });
+
     }
   };
 
@@ -800,17 +889,23 @@ class App extends React.Component {
       ([id, score]) => ({
         seq: id,
         ranking_score: score.trim() === "" ? null : score,
+        status: this.state.editingStatus[id] && this.state.editingStatus[id].trim() !== ""
+        ? this.state.editingStatus[id]
+        : '미검토'
       })
     );
+
 
     $.ajax({
       type: "POST",
       url: "../../api/ranking/edit/",
       data: { updates: updates },
       success: (response) => {
+        const rst = JSON.parse(response);
         this.setState({
           isEdit: false,
           editingScores: {},
+          editingStatus: {},
           showEditConfirmation: false,
         });
         window.location.reload();
@@ -833,6 +928,34 @@ class App extends React.Component {
         [id]: value,
       },
     }));
+  };
+  handleStatusChange = (e,id) => {
+    const value = e.target.value;
+    this.setState((prevState) => ({
+      editingStatus: {
+        ...prevState.editingStatus,
+        [id]: value,
+      },
+    }));
+  };
+
+  getStatusClass = (status) => {
+    switch (status) {
+      case "등록":
+        return "status-success";  // 예: 초록색
+      case "실격":
+        return "status-danger";   // 예: 빨간색
+      case "기타":
+        return "status-warning";  // 예: 주황색
+      case "미검토":
+        return "status-default";  // 예: 회색
+      default:
+        return "";
+    }
+  };    
+
+  setActiveTab = (type) => {
+    this.setState({activeTab:type, currentPage:1});
   };
 
   handleGroupSelection = (group) => {
@@ -897,8 +1020,8 @@ class App extends React.Component {
   downloadVideo = async (videoFileName) => {
     try {
       // 서버 내 업로드 경로: /uploads 폴더에 저장
-      const url = '/uploads/'+videoFileName+'.mp4';
-
+      const url = '/uploads/'+videoFileName;
+      console.log('videoPath:'+url);
       // 다운로드 링크 생성 및 클릭
       const link = document.createElement("a");
       link.href = url;
@@ -943,8 +1066,10 @@ class App extends React.Component {
 
   render() {
     const {
+      all,
       ranking,
       schoolRanking,
+      pending,
       selectedApName,
       selectedSchoolName,
       selectedGroup,
@@ -968,19 +1093,31 @@ class App extends React.Component {
     const adminClass = isAdmin ? "admin" : "";
 
     // Filter and paginate the ranking data
+    
     const filteredRanking = ranking[selectedApName]
       ? ranking[selectedApName]
         .filter(
           (entry) =>
             entry.school_group === selectedGroup &&
-            (!isAdmin ? entry.created_at < this.state.updateDate : true)
+            (!isAdmin ? entry.created_at < this.state.updateDate : true) 
+        )
+      : [];
+    
+    const filteredPending = pending[selectedApName]
+        ? pending[selectedApName]
+        .filter(
+          (entry) =>
+            entry.school_group === selectedGroup &&
+            (!isAdmin ? entry.created_at < this.state.updateDate : true) 
         )
       : [];
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredRanking.slice(indexOfFirstItem, indexOfLastItem);
-
+    const currentItems =  this.state.activeTab === 'approved' ? 
+          filteredRanking.slice(indexOfFirstItem, indexOfLastItem) :
+          filteredPending.slice(indexOfFirstItem,indexOfLastItem);
+         
     return (
       <div id="ranking-main">
         <div className="ranking-container">
@@ -990,7 +1127,7 @@ class App extends React.Component {
             />
           </div>
           <div className="side-menu">
-            {Object.entries(ranking)
+            {Object.entries(all)
               .sort(
                 ([, valueA], [, valueB]) =>
                   apOrder.indexOf(valueA[0].ap_name) -
@@ -1085,8 +1222,26 @@ class App extends React.Component {
                     : "url(assets/ranking_bar.png)",
                 }}
               >
-              {ranking[selectedApName] && ranking[selectedApName][0].ap_name}
+              {all[selectedApName] && all[selectedApName][0].ap_name}
               </div>
+              {isAdmin && isLogin && (
+              <div className="tab-bar">
+                <button
+                  className={this.state.activeTab === "approved" ? "active" : ""}
+                  onClick={() => this.setActiveTab("approved")}
+                >
+                  승인된 링크
+                </button>
+                <button
+                  className={this.state.activeTab === "pending" ? "active" : ""}
+                  onClick={() => this.setActiveTab("pending")}
+                >
+                  미처리 내역
+                </button>
+              </div>
+              )}
+
+              
               <div className="ranking-tables">
                 <div className="ranking-table">
                   <div className="ranking-body">
@@ -1280,14 +1435,30 @@ class App extends React.Component {
                   <div>학교명</div>
                   <div className="ranking-center">점수</div>
                   <div className="ranking-center">등록 날짜</div>
+                  <div className="ranking-center">상태</div>
                 </div>
                 {this.state.schoolRanking[selectedSchoolName] &&
                   this.state.schoolRanking[selectedSchoolName]
                     .sort(
-                      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                      (a, b) => {
+                        // 상태 우선순위 지정
+                        const statusOrder = {
+                          "미검토": 1,
+                          "기타": 2,
+                          "실격": 3,
+                          "등록": 4
+                        };
+
+                        // 1️⃣ 상태 우선 정렬
+                        const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+                        if (statusDiff !== 0) return statusDiff;
+
+                        // 2️⃣ 같은 상태면 날짜 오름차순 (예전 → 최신)
+                        return new Date(a.created_at) - new Date(b.created_at);
+                      }
                     )
 
-                    .filter((record) => record.ranking_ap_sn === selectedApName)
+                    .filter((record) => record.ranking_ap_sn === selectedApName )
                     .map((value, index) => (
                       <div
                         key={index}
@@ -1325,6 +1496,27 @@ class App extends React.Component {
                         </div>
                         <div className="ranking-center">
                           <b>{value.created_at}</b>
+                        </div>
+                        <div>
+                          {isEdit ? (
+                            <select
+                              className={`edit-select ${this.getStatusClass(this.state.editingStatus[value.seq])}`}
+                              value={this.state.editingStatus[value.seq] || value.status }
+                              onChange={(e) =>
+                                this.handleStatusChange(e, value.seq)
+                              }
+                            >
+                              <option value="미검토">미검토</option>
+                              <option value="실격">실격</option>
+                              <option value="등록">등록</option>
+                              <option value="기타">기타</option>
+                            </select>
+
+                          ) : (
+                            <b className="ranking-center ${this.getStatusClass(value.status)}">
+                              {value.status}
+                            </b>
+                          )}
                         </div>
                         <div className="buttons-wrapper">
                           <button

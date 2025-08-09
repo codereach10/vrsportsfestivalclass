@@ -48,15 +48,9 @@ $AWS_REGION = isset($env_vars['AWS_REGION ']) ? trim($env_vars['AWS_REGION ']) :
 	<script type="text/javascript" src="../../inc/react-dom-15.6.1.min.js"></script>
 	<script type="text/javascript" src="../../inc/gsap.min.js"></script>
 	<script type="text/javascript" src="../../inc/wstyle-0.3.1.js"></script>
-	<!--script type="text/javascript" src="../../inc/aws-sdk-2.1654.0.min.js"></script-->
 	<script type="text/babel" src="../App.jsx"></script>
 	
 	<script>
-
-		
-  //const AWS_ACCESS_KEY_ID = "<?php echo htmlspecialchars($AWS_ACCESS_KEY_ID); ?>";
-  //const AWS_SECRET_KEY = "<?php echo htmlspecialchars($AWS_SECRET_KEY); ?>";
-  //const AWS_REGION = "<?php echo htmlspecialchars($AWS_REGION); ?>";
 
 
 </script>
