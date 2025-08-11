@@ -53,7 +53,7 @@ $SECRET_KEY = isset($env_vars['SECRET_KEY ']) ? trim($env_vars['SECRET_KEY ']) :
 	<script type="text/javascript" src="../../inc/gsap.min.js"></script>
 	<script type="text/javascript" src="../../inc/wstyle-0.3.1.js"></script>
 	<!--script type="text/javascript" src="../../inc/aws-sdk-2.1654.0.min.js"></script-->
-	<!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script>
 
 		
