@@ -104,8 +104,8 @@ class Toast extends React.Component {
             </div>
           ) : (
             <div className="message">
-              <span className="text text-one">Error</span>
-              <span className="text text-two">Error Occurred</span>
+              <span className="text text-one">안내</span>
+              <span className="text text-two">{this.props.message}</span>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 <?php
-$HOME_DIR = "../../";
+$HOME_DIR = "../";
 include $HOME_DIR . "_include/_db.php";
 include $HOME_DIR . "_include/_code.php";
 

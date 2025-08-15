@@ -8,23 +8,26 @@ class DataTable extends React.Component {
       currentData: {},
       schools: null,
       contents: null,
+      admins: null,
       isEditing: false,
       editedRowIdx: null,
 
       sortBy: null,
       sortDirection: null,
-
+      
       showDeletePopup: false,
       deleteRowIndex: null,
       deleteContestId: null,
       deleteSchoolId: null,
+      deleteAdminId: null,
+      deleteContentId: null,
     };
   }
 
   componentDidMount() {
     this.getSchoolList();
     this.getContentList();
-
+    this.getAdminList();
     this.wstyle = R5.wStyle(`
         #table-wrap {
           display: flex;
@@ -551,6 +554,9 @@ dropdown-menu form-search {
       success: (response) => {
         this.setState({ schools: JSON.parse(response).school });
       },
+      error: (xhr, status, error) => {
+        console.error("Error fetching school list:", error);
+      },
     });
   };
 
@@ -561,19 +567,38 @@ dropdown-menu form-search {
       success: (response) => {
         this.setState({ contents: JSON.parse(response).content });
       },
+      error: (xhr, status, error) => {
+        console.error("Error fetching content list:", error);
+      },
     });
   };
+
+  getAdminList = () => {
+    return $.ajax({   
+      type: "GET",
+      url: "/api/admin/read/index.php",
+      success: (response) => {
+        this.setState({ admins: JSON.parse(response).admin });
+      },
+      error: (xhr, status, error) => {
+        console.error("Error fetching admin list:", error);
+      },
+    });
+  };
+
   handleDeleteClick = (idx) => {
     const { current } = this.props;
     const rowToDelete = current[idx];
 
-    const { contest_id, school_id } = rowToDelete;
+    const { contest_id, school_id, school_pid, seq , ap_sn } = rowToDelete;
 
     this.setState({
       showDeletePopup: true,
       deleteRowIndex: idx,
       deleteContestId: contest_id,
-      deleteSchoolId: school_id,
+      deleteSchoolId: school_id|school_pid,
+      deleteAdminId: seq,
+      deleteContentId: ap_sn
     });
   };
 
@@ -668,7 +693,7 @@ dropdown-menu form-search {
                         : true)
                     }
                     showResetIcon={this.props.showResetIcon}
-                    handleDeleteClick={() =>
+                    handleDeleteClick={() => 
                       this.handleDeleteClick(indexOfFirstElement + idx)
                     }
                   />
@@ -717,7 +742,8 @@ dropdown-menu form-search {
             onDelete={() =>
               this.props.handleDelete(
                 this.state.deleteContestId,
-                this.state.deleteSchoolId
+                this.state.deleteSchoolId,
+                this.state.deleteAdminId||this.state.deleteContentId
               )
             }
           />
@@ -770,6 +796,7 @@ const renderFormElement = (
   idx,
   schools,
   contents,
+  admins,
   handleStateChange
 ) => {
   const renderSelect = (options) => (
@@ -879,13 +906,27 @@ const renderFormElement = (
           {renderDateTimeInput()}
         </div>
       );
-
-    default:
-      const isDisabled = key === "contest_id" || key === "gs_uid";
+    case "role":
       return (
         <div key={idx} className="form-element">
           <label className="required">{key}</label>
-          {renderTextInput(isDisabled)}
+          <select
+            className="edit-input"
+            value={value}
+            onChange={(e) => handleStateChange(key, e.target.value)}
+          >
+            <option value="master">마스터</option>
+            <option value="manager">관리자</option>
+            <option value="ranking">랭킹</option>
+          </select>
+        </div>
+      );
+    default:
+      const isDisabled = key === "contest_id" || key === "gs_uid" || key === "admin_id" || key === "seq" || key === "id" || key === "school_pid" || key === "school_sc_code" || key === "ap_sn" || key === "parent_ap_sn";
+      return (
+        <div key={idx} className="form-element">
+          <label className="required">{key}</label>
+          {renderTextInput(isDisabled)} 
         </div>
       );
   }
@@ -934,6 +975,7 @@ class EditWindow extends React.Component {
                 (this.props.currentPage - 1) * 5 + index,
                 this.props.schools,
                 this.props.contents,
+                this.props.admins,
                 this.handleStateChange
               )
             )}
@@ -1044,6 +1086,16 @@ function DataRow({
                   <p key={playerIndex}>{player}</p>
                 ))}
               </div>
+            )  : key === "role" ? (
+              <div className="static-field" key={index}>
+                {value == "master" ? (
+                  <p className="tag before">마스터</p>
+                ) : value == "manager" ? (
+                  <p className="tag ready">관리자</p>
+                ) : value == "ranking" ? (
+                  <p className="tag during">랭킹</p>
+                ) : ""}
+              </div> 
             ) : (
               <div key={index}>{value}</div>
             )}
@@ -1055,7 +1107,12 @@ function DataRow({
           <img
             className="icon"
             src="/admin/assets/delete.svg"
-            onClick={() => handleDeleteClick(idx)}
+            onClick={(e) => 
+              {
+                e.stopPropagation();
+                handleDeleteClick(idx)
+              }
+            }
           />
         </td>
       )}

@@ -1,14 +1,12 @@
 class SchoolAdmin extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      currentSchool: null,
+      isAddContent: false,
+      currentData: {},
+    };
   }
-
-  state = {
-    currentSchool: null,
-    isAddContent: false,
-    currentData: {},
-  };
-
   wstyle = null;
 
   async componentDidMount() {
@@ -290,10 +288,20 @@ width: 100%;}
       url: "/api/school_info/edit/index.php",
       data: data[index],
       success: function (response) {
-        ReactDOM.render(
-          <Toast type={"Success"} />,
-          document.getElementById("toast-container")
-        );
+        if(response.code !== 200) {
+          ReactDOM.render(
+            <Toast type={"failure"} message={response.message}/>,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+        } else {
+          this.getCurrentAdmin();
+          ReactDOM.render(
+            <Toast type={"Success"} />,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+        }
       },
       error: function (xhr, status, error) {
         console.log("Error:", error);
@@ -311,12 +319,22 @@ width: 100%;}
       url: "/api/school_info/create/index.php",
       data: data,
       success: (response) => {
-        ReactDOM.render(
-          <Toast type={"Success"} />,
-          document.getElementById("toast-container")
-        );
-        this.setState({ isAddContent: false });
-        window.location.reload();
+        if (response.code !== 200) {
+          // Failure case
+          ReactDOM.render(
+            <Toast type={"failure"} message={response.message}/>,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+        } else {
+          // Success case
+          ReactDOM.render(
+            <Toast type={"Success"}/>,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+          window.location.reload();
+        }
       },
       error: (xhr, status, error) => {
         console.log("Error:", error);
@@ -336,6 +354,23 @@ width: 100%;}
     }));
 
     e.target.classList.remove("required-field");
+  };
+
+  handleDelete = async (contestId,schoolId,seq) => {
+    console.log("contestId:"+contestId);
+    console.log("schoolId:"+schoolId);
+    console.log("seq:"+seq);
+    const response = await makeAjaxRequest(
+      "POST",
+      "/api/school_info/delete_one/index.php",
+      {
+        school_pid: schoolId,
+      }
+    );
+
+    if (response.code == 200) {
+      window.location.reload();
+    }
   };
 
   render() {
@@ -366,6 +401,8 @@ width: 100%;}
               handlerFunct={this.handleSaveSchool}
               title={"학교 정보 테이블"}
               showEditIcon={true}
+              showDeleteIcon={true}
+              handleDelete={this.handleDelete}
             />
 
             {this.state.isAddContent && (

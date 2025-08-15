@@ -1145,13 +1145,21 @@ class App extends React.Component {
           </div>
           {isAdmin && (
             <div className="admin-buttons">
-              <button
+              {isLogin && (<button
                 className="admin-button"
                 onClick={() => this.setState({ showLoginPopup: true })}
               >
-                관리자
+                로그아웃
               </button>
-              {isLogin && isAdmin && (
+              )}
+              {!isLogin && (<button
+                className="admin-button"
+                onClick={() => this.setState({ showLoginPopup: true })}
+              >
+                로그인
+              </button>
+              )}
+              {isLogin &&  (
                 <button
                   className="admin-button"
                   onClick={() =>
@@ -1230,13 +1238,13 @@ class App extends React.Component {
                   className={this.state.activeTab === "approved" ? "active" : ""}
                   onClick={() => this.setActiveTab("approved")}
                 >
-                  승인된 링크
+                  등록 상태
                 </button>
                 <button
                   className={this.state.activeTab === "pending" ? "active" : ""}
                   onClick={() => this.setActiveTab("pending")}
                 >
-                  미처리 내역
+                  미등록 상태
                 </button>
               </div>
               )}

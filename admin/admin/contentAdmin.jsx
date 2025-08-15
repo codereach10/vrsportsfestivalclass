@@ -264,7 +264,22 @@ class ContentAdmin extends React.Component {
 
     e.target.classList.remove("required-fields");
   };
+   handleDelete = async (contestId,schoolId,seq) => {
+    console.log("contestId:"+contestId);
+    console.log("schoolId:"+schoolId);
+    console.log("seq:"+seq);
+    const response = await makeAjaxRequest(
+      "POST",
+      "/api/content_info/delete_one/index.php",
+      {
+        ap_sn: seq,
+      }
+    );
 
+    if (response.code == 200) {
+      window.location.reload();
+    }
+  };
   render() {
     const tableHeaders = {
       ap_sn: "콘텐츠 코드",
@@ -295,6 +310,8 @@ class ContentAdmin extends React.Component {
               handlerFunct={this.handleSaveContent}
               title="콘텐츠 정보 테이블"
               showEditIcon={true}
+              showDeleteIcon={true}
+              handleDelete={this.handleDelete}
             />
 
             {this.state.isAddContent && (

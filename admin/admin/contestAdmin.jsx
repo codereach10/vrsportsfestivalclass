@@ -2,6 +2,7 @@ class ContestAdmin extends React.Component {
   constructor(props) {
     super(props);
     this.handleSaveContest = this.handleSaveContest.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
   }
 
   state = {
@@ -343,7 +344,29 @@ class ContestAdmin extends React.Component {
     } else if (type === "large") {
       this.setState({ banner_large: e.target.files[0] });
     }
+  }; 
+  
+  handleDelete = async (contestId,schoolId,seq) => {
+    const response = await makeAjaxRequest(
+      "POST",
+      "/api/contest_info/delete_one/index.php",
+      {
+        contest_id: contestId,
+      }
+    );
+    console.log("code:"+response.code);
+    if (response.code === 200) {
+      window.location.reload();
+    } else {
+      ReactDOM.render(
+        <Toast type={"failure"} message={response.message}/>,
+        document.getElementById("toast-container")
+      );
+      this.setState({ isAddContent: false });
+    }
   };
+
+
 
   render() {
     const tableHeaders = {
@@ -375,6 +398,8 @@ class ContestAdmin extends React.Component {
               handlerFunct={this.handleSaveContest}
               navigationFunct={this.props.funct}
               title={"대회 정보 테이블"}
+              showDeleteIcon={true}
+              handleDelete={this.handleDelete}
             />
           </div>
         </div>

@@ -6,10 +6,10 @@ include $HOME_DIR . "_include/_code.php";
 $contest_id = $_POST['contest_id'];
 $contest_cnt = $_POST['contest_cnt'];
 $contest_name = $_POST['contest_name'];
-$register_start = date('Y-m-d H:i:s', $_POST['register_start']);
-$register_end = date('Y-m-d H:i:s', $_POST['register_end']);
-$kickoff_start = date('Y-m-d H:i:s', $_POST['kickoff_start']);
-$kickoff_end = date('Y-m-d H:i:s', $_POST['kickoff_end']);
+$register_start_str = $_POST['register_start'];
+$register_end_str = $_POST['register_end'];
+$kickoff_start_str = $_POST['kickoff_start'];
+$kickoff_end_str = $_POST['kickoff_end'];
 $terms_info = $_POST['terms_info'];
 
 if (
@@ -21,6 +21,18 @@ if (
     if (!isset($contest_name)) $missing_params[] = "contest_name";
 
     $ret = array("code" => ERR_PARAMS_EMPTY, "message" => "Parameters not set: " . implode(", ", $missing_params));
+    echo json_encode($ret);
+    exit;
+}
+
+try {
+    $register_start = (new DateTime($register_start_str))->format('Y-m-d H:i:s');
+    $register_end = (new DateTime($register_end_str))->format('Y-m-d H:i:s');
+    $kickoff_start = (new DateTime($kickoff_start_str))->format('Y-m-d H:i:s');
+    $kickoff_end = (new DateTime($kickoff_end_str))->format('Y-m-d H:i:s');
+} catch (Exception $e) {
+    // 날짜 형식이 잘못되었을 경우 에러 처리
+    $ret = array("code" => ERR_INVALID_DATE, "message" => "Invalid date format provided.");
     echo json_encode($ret);
     exit;
 }

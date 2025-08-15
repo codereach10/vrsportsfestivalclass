@@ -1234,7 +1234,7 @@ class FormContestSchools extends React.Component {
                     </li>
                   ))
                 ) : (
-                  <div>학교 전재하지 않습니다...</div>
+                  <div>학교 존재하지 않습니다...</div>
                 )}
               </ul>
             </div>

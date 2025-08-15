@@ -15,6 +15,8 @@ class Admin extends React.Component {
   }
 
   async componentDidMount() {
+    this.getCurrentAdmin();
+
     this.wStyle = R5.wStyle(`
     
     #admin-wrap {
@@ -145,11 +147,26 @@ class Admin extends React.Component {
 
   async addNewAdmin(data) {
     try {
-      await makeAjaxRequest("POST", "/api/admin/create/index.php", data);
-      ReactDOM.render(
-        <Toast type={"Success"} />,
-        document.getElementById("toast-container")
-      );
+      const response = await makeAjaxRequest("POST", "/api/admin/create/index.php", data);
+      if(response.code !== 200) {
+          ReactDOM.render(
+            <Toast type={"failure"} message={response.message}/>,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+        } else {
+          ReactDOM.render(
+            <Toast type={"Success"} />,
+            document.getElementById("toast-container")
+          );
+          
+          this.setState({ isAddContent: false });
+          setTimeout(() => {
+            //this.getCurrentAdmin();
+            window.location.reload();
+          },500);
+          
+        }
     } catch (error) {
       console.log(error);
     }
@@ -164,7 +181,28 @@ class Admin extends React.Component {
       },
     });
   };
+  async getData() {
+    try {
+      const response = await $.ajax({
+        type: "GET",
+        url: "/api/admin/read/index.php",
+      });
+      return response;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      throw error;
+    }
+  }
 
+  async getCurrentAdmin() {
+    try {
+      const res = await this.getData();
+      const admin = JSON.parse(res).admin;
+      this.setState({ currentAdmin: { ...admin } });
+    } catch (err) {
+      console.error(err);
+    }
+  }
   handleSaveClick = () => {
     const requiredFields = ["id", "password", "role"];
     const emptyFields = requiredFields.filter(
@@ -183,22 +221,52 @@ class Admin extends React.Component {
       this.resetForm();
     }
   };
-
+  
   handleSaveAdmin = (data, index) => {
     return $.ajax({
       type: "POST",
-      url: "/api/school_info/edit/index.php",
+      url: "/api/admin/edit/index.php",
       data: data[index],
       success: function (response) {
-        ReactDOM.render(
-          <Toast type={"Success"} />,
-          document.getElementById("toast-container")
-        );
+        if(response.code !== 200) {
+          ReactDOM.render(
+            <Toast type={"failure"} message={response.message}/>,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+        } else {
+          this.getCurrentAdmin();
+          ReactDOM.render(
+            <Toast type={"Success"} />,
+            document.getElementById("toast-container")
+          );
+          this.setState({ isAddContent: false });
+        }
       },
       error: function (xhr, status, error) {
         console.log("Error:", error);
       },
     });
+  };
+
+  handleDelete = async (contestId,schoolId,seq) => {
+    const response = await makeAjaxRequest(
+      "POST",
+      "/api/admin/delete_one/index.php",
+      {
+        seq: seq,
+      }
+    );
+    console.log("code:"+response.code);
+    if (response.code === 200) {
+      window.location.reload();
+    } else {
+      ReactDOM.render(
+        <Toast type={"failure"} message={response.message}/>,
+        document.getElementById("toast-container")
+      );
+      this.setState({ isAddContent: false });
+    }
   };
   
   render() {
@@ -213,10 +281,9 @@ class Admin extends React.Component {
       e.target.classList.remove("required-fields");
     };
     const tableHeaders = {
-        admin_pid: "학교 고유번호 ",
-        school_host: "호스트 여부",
-        school_sc_code: "학교 코드",
-        school_name: "학교 이름",
+        seq:"고유번호 ",
+        id: "관리자 아이디",
+        role: "역할",
       };
     return (
       
@@ -268,6 +335,8 @@ class Admin extends React.Component {
               handlerFunct={this.handleSaveAdmin}
               title={"관리자 정보 테이블"}
               showEditIcon={true}
+              showDeleteIcon={true}
+              handleDelete={this.handleDelete}
             />
           <div className="button-wrap">
             <div className="cancel-button" onClick={this.resetForm}>

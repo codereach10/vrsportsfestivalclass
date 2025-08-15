@@ -2,11 +2,11 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      school: "", //"4000037",
+      school: "", 
       schoolName: "",
-      content: "", //"1883",
+      content: "", 
       contentName: "",
-      score: "", //"10",
+      score: "", 
       videoName: "",
       error: "",
       showSaveButton: false,
@@ -20,11 +20,14 @@ class App extends React.Component {
     const queryString = urlObj.search.substring(1);
 
     const params = this.decrypt(queryString, this.props.secretKey);
-
+    //const query = new URLSearchParams(window.location.search);
+    //const school = query.get("school");   // "4000037"
+    //const content = query.get("content"); // "1883"
+    //const score = query.get("score");     // "10"
     const school = new URLSearchParams(params).get("school"); //"4000037" ;
     const content =  new URLSearchParams(params).get("content"); //"1883";
     const score =  new URLSearchParams(params).get("score"); //"10";
-
+    //console.log("school:"+school+" content:"+content+" score:"+score);
     await this.getNamesByCodes(school, content);
     await this.getCount(school, content);
 
