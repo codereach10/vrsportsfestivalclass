@@ -258,6 +258,7 @@ class MatchAdmin extends React.Component {
 
     e.target.classList.remove("required-field");
   };
+
   render() {
     const tableHeaders = {
       uid: "고유번호",
@@ -292,6 +293,7 @@ class MatchAdmin extends React.Component {
               headers={tableHeaders}
               handlerFunct={this.handleSaveMatch}
               title="경기 정보 테이블"
+              
             />
             <div className="button-wrap">
               {!this.state.isAddContent && (

@@ -27,7 +27,7 @@ class App extends React.Component {
     const school = new URLSearchParams(params).get("school"); //"4000037" ;
     const content =  new URLSearchParams(params).get("content"); //"1883";
     const score =  new URLSearchParams(params).get("score"); //"10";
-    //console.log("school:"+school+" content:"+content+" score:"+score);
+    console.log("school:"+school+" content:"+content+" score:"+score);
     await this.getNamesByCodes(school, content);
     await this.getCount(school, content);
 
@@ -36,6 +36,14 @@ class App extends React.Component {
       content: content || "",
       score: score || "",
     });
+
+    if(this.state.school == "") {
+        this.setState({ error: "학교 정보가 없습니다."});
+      } else if(this.state.content == "") {
+        this.setState({ error: "콘텐츠정보가 없습니다."});
+      } else if(this.state.score == "") {
+        this.setState({ error: "점수 정보가 없습니다."});
+      }
 
     this.wstyle = R5.wStyle(`
         #new-ranking {
@@ -194,7 +202,8 @@ class App extends React.Component {
     if(ext == '') {
       ext='mov';
     }
-    const videoFile = `${this.state.school}_${this.state.content}_${this.state.score}_${currentDate}`+ '.' + ext;
+    //const videoFile = `${this.state.school}_${this.state.content}_${this.state.score}_${currentDate}`+ '.' + ext;
+    const videoFile = `${this.state.school}_${this.state.content}_${currentDate}`+ '.' + ext;
     this.setState({ videoName: videoFile });
     const formData = new FormData();
     
@@ -332,6 +341,7 @@ class App extends React.Component {
       this.setState({
         contentName: responseContentData.content[0].ap_name,
       });
+      
     } catch (error) {
       console.error("Error fetching school information:", error);
     }

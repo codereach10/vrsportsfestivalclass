@@ -293,9 +293,8 @@ width: 100%;}
             <Toast type={"failure"} message={response.message}/>,
             document.getElementById("toast-container")
           );
-          this.setState({ isAddContent: false });
         } else {
-          this.getCurrentAdmin();
+          getCurrentSchool();
           ReactDOM.render(
             <Toast type={"Success"} />,
             document.getElementById("toast-container")
@@ -452,7 +451,7 @@ function FormSchool({
   };
 
   const handleSubmit = () => {
-    const requiredFields = ["school_sc_code", "school_name"];
+    const requiredFields = ["school_sc_code", "school_name", "school_group"];
     const emptyFields = requiredFields.filter((field) => !currentData[field]);
 
     if (emptyFields.length > 0) {
@@ -503,6 +502,20 @@ function FormSchool({
               }
             />
           </div>
+          <div className="form-element">
+            <label className="required">학교 그룹</label>
+            <input
+              id="school_group"
+              className="text-input"
+              type="text"
+              placeholder="학교 그룹 입력(예: A, B, C)"
+              onChange={(e) =>
+                handleStateChange(e, "school_group", e.target.value)
+              }
+            />
+          </div>
+        </div>
+        <div className="form-row">
           <div className="form-element">
             <label>호스트 여부</label>
             <label className="host-checkbox">

@@ -24,15 +24,22 @@ if (
     echo json_encode($ret);
     exit;
 }
-
+    
 try {
-    $register_start = (new DateTime($register_start_str))->format('Y-m-d H:i:s');
-    $register_end = (new DateTime($register_end_str))->format('Y-m-d H:i:s');
-    $kickoff_start = (new DateTime($kickoff_start_str))->format('Y-m-d H:i:s');
-    $kickoff_end = (new DateTime($kickoff_end_str))->format('Y-m-d H:i:s');
+    $register_start = (new DateTime($register_start_str, new DateTimeZone("Asia/Seoul")))->format('Y-m-d H:i:s');
+    $register_end = (new DateTime($register_end_str, new DateTimeZone("Asia/Seoul")))->format('Y-m-d H:i:s');
+    $kickoff_start = (new DateTime($kickoff_start_str, new DateTimeZone("Asia/Seoul")))->format('Y-m-d H:i:s');
+    $kickoff_end = (new DateTime($kickoff_end_str, new DateTimeZone("Asia/Seoul")))->format('Y-m-d H:i:s');
+    //$register_start = (new DateTime('@'.$register_start_str));
+    //$register_end = (new DateTime('@'.$register_end_str));
+    //$kickoff_start = (new DateTime('@'.$kickoff_start_str));
+    //$kickoff_end = (new DateTime('@'.$kickoff_end_str));
+
+    
+
 } catch (Exception $e) {
     // 날짜 형식이 잘못되었을 경우 에러 처리
-    $ret = array("code" => ERR_INVALID_DATE, "message" => "Invalid date format provided.");
+    $ret = array("code" => ERR_INVALID_DATE, "message" => "Invalid date format provided. $register_start_str, $register_end_str, $kickoff_start_str, $kickoff_end_str");
     echo json_encode($ret);
     exit;
 }

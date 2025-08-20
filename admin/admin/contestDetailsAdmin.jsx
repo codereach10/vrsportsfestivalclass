@@ -609,11 +609,67 @@ class ContestDetails extends React.Component {
   }
 
   handleEditContest = async () => {
-    await makeAjaxRequest(
+
+    // 1. state를 직접 수정하지 않기 위해 전송용 데이터 객체를 복사
+    const dataToSend = { ...this.state.contest };
+
+    // 2. 날짜 필드들을 서버 형식에 맞게 변환
+    const dateFields = ['register_start', 'register_end', 'kickoff_start', 'kickoff_end'];
+
+    dateFields.forEach(field => {
+      const originalValue = dataToSend[field];
+      console.log(`Original ${field}:`, originalValue);
+
+      // 현재 값이 유효한 숫자인지 확인 (Unix 타임스탬프인 경우)
+      // typeof originalValue === 'number' 이거나
+      // typeof originalValue === 'string' 이면서 숫자로만 구성된 문자열일 수 있습니다.
+      if (!isNaN(originalValue) && originalValue !== null && originalValue !== '') {
+        // Unix 타임스탬프는 초 단위이므로 밀리초로 변환 ( * 1000)
+        const date = new Date(Number(originalValue) * 1000);
+
+        // Date 객체가 유효한 날짜인지 확인
+        if (!isNaN(date.getTime())) {
+          // YYYY-MM-DD HH:MM:SS 형식으로 포매팅
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const seconds = String(date.getSeconds()).padStart(2, '0');
+
+          dataToSend[field] = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+          console.log(`Formatted ${field}:`, dataToSend[field]);
+        } else {
+          console.warn(`Invalid date value for ${field}:`, originalValue);
+          // 유효하지 않은 날짜의 경우 빈 문자열 또는 null 등으로 처리하여 PHP에서 오류 방지
+          dataToSend[field] = '';
+        }
+      } else if (typeof originalValue === 'string') {
+        // 이미 문자열 형태의 날짜일 경우 (예: UI 입력 필드에서 직접 받은 값)
+        // T를 공백으로 바꾸고, 초가 없다면 ':00'을 추가하
+        let formattedDate = originalValue.replace('T', ' ');
+        if (formattedDate.length === 16) { // YYYY-MM-DD HH:mm
+          formattedDate += ':00';
+        }
+        dataToSend[field] = formattedDate;
+        //console.log(`String formatted ${field}:`, dataToSend[field]);
+      } else {
+          console.warn(`Unexpected value type for ${field}:`, originalValue);
+          dataToSend[field] = ''; // 알 수 없는 타입은 빈 문자열로 처리
+      }
+    });
+    //console.log("Data being sent to PHP:", JSON.stringify(dataToSend));
+    const response = await makeAjaxRequest(
       "POST",
       "/api/contest_info/edit/index.php",
-      this.state.contest
+      dataToSend
     );
+
+    if (response.code == 200) {
+      window.location.reload();
+    } else {
+      alert(response.message || "대회 정보 수정에 실패했습니다.");
+    }
   };
 
   getContentCode(contents, name) {
@@ -657,6 +713,19 @@ class ContestDetails extends React.Component {
     }
   };
 
+  handleMatchDelete = async (contestId, matchId) => {
+    const response = await makeAjaxRequest(
+      "POST",
+      "/api/schedule/delete_one/index.php",
+      {
+        gs_uid: matchId,
+      }
+    );
+    if (response.code == 200) {
+      window.location.reload();
+    }
+  };
+
   handleTagClick = (menuTag) => {
     this.setState({ activeTag: menuTag });
   };
@@ -687,6 +756,7 @@ class ContestDetails extends React.Component {
     };
 
     handleInputChange = (title, value) => {
+      console.log("title: " + title + ", value: " + value);
       this.setState((prevState) => ({
         contest: {
           ...prevState.contest,
@@ -694,6 +764,13 @@ class ContestDetails extends React.Component {
         },
       }));
     };
+
+    function toLocalISOString(date) {
+      if (!date) return "";
+      const offset = date.getTimezoneOffset(); // 분 단위
+      const local = new Date(date.getTime() - offset * 60000); // UTC 보정
+      return local.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+  }
 
     switch (this.state.activeTag) {
       case "contest-info":
@@ -706,8 +783,9 @@ class ContestDetails extends React.Component {
                   <input
                     className="detail-input"
                     type="datetime-local"
-                    value={new Date(value).toISOString().slice(0, 16)}
+                    value={toLocalISOString(new Date(value))}
                     onChange={change}
+                    onClick={(e) => e.stopPropagation()} 
                   />
                 ) : (
                   <input
@@ -715,6 +793,7 @@ class ContestDetails extends React.Component {
                     type="text"
                     value={value}
                     onChange={change}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 )}
               </div>
@@ -724,7 +803,7 @@ class ContestDetails extends React.Component {
               <div className="detail-element">
                 <div className="detail-title">{title}</div>
                 <div className={`detail-value ${type === "dash" && "dash"}`}>
-                  {value}
+                  { value }
                 </div>
               </div>
             );
@@ -782,7 +861,7 @@ class ContestDetails extends React.Component {
                     title="접수 시작일"
                     value={formatDate(this.state.contest.register_start)
                       .split("T")
-                      .join("\r\n")}
+                      .join(" ")}
                     type="date"
                     change={(e) =>
                       handleInputChange("register_start", e.target.value)
@@ -792,7 +871,7 @@ class ContestDetails extends React.Component {
                     title="접수 종료일"
                     value={formatDate(this.state.contest.register_end)
                       .split("T")
-                      .join("\r\n")}
+                      .join(" ")}
                     type="date"
                     change={(e) =>
                       handleInputChange("register_end", e.target.value)
@@ -802,7 +881,7 @@ class ContestDetails extends React.Component {
                     title="대회 시작일"
                     value={formatDate(this.state.contest.kickoff_start)
                       .split("T")
-                      .join("\r\n")}
+                      .join(" ")}
                     type="date"
                     change={(e) =>
                       handleInputChange("kickoff_start", e.target.value)
@@ -812,7 +891,7 @@ class ContestDetails extends React.Component {
                     title="대회 종료일"
                     value={formatDate(this.state.contest.kickoff_end)
                       .split("T")
-                      .join("\r\n")}
+                      .join(" ")}
                     type="date"
                     change={(e) =>
                       handleInputChange("kickoff_end", e.target.value)
@@ -931,6 +1010,8 @@ class ContestDetails extends React.Component {
               handlerFunct={this.handleSaveContestMatch}
               showEditIcon={true}
               showResetIcon={true}
+              showDeleteIcon={true}
+              handleDelete={this.handleMatchDelete}
               title=""
             />
 
@@ -1319,7 +1400,7 @@ class FormContestMatches extends React.Component {
 
     try {
       await makeAjaxRequest("POST", "/api/schedule/create/index.php", data);
-
+      window.location.reload();
       this.props.closeFunct();
     } catch (error) {
       console.log(error);

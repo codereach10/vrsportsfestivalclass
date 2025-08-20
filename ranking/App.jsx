@@ -596,7 +596,76 @@ class App extends React.Component {
     }
   }
 
+  calculateScore = (scoreString) => {
+    if (typeof scoreString !== 'string') {
+      console.warn("calculateScore: 입력 값이 문자열이 아닙니다.", scoreString);
+      return String(scoreString); // 문자열이 아니면 그대로 문자열로 변환하여 반환
+    }
+
+    // 1. "%"의 유무 확인
+    const hasPercentage = scoreString.includes('%');
+
+    // 2. "%"가 없을 경우 원본 scoreString 리턴
+    if (!hasPercentage) {
+      return scoreString;
+    }
+
+    let tempScore = scoreString.replace(/%/g, ''); // '%' 제거
+    let timePart = 0;
+    let percentagePart = 0;
+
+    // "초"를 기준으로 시간과 퍼센트 부분 분리
+    const parts = tempScore.split('초');
+    if (parts.length === 2) {
+      // 시간 부분 파싱
+      const parsedTime = parseFloat(parts[0]);
+      if (!isNaN(parsedTime)) {
+        timePart = parsedTime;
+      } else {
+        console.warn("calculateScore: 시간 부분을 파싱할 수 없습니다.", parts[0]);
+        return scoreString; // 파싱 실패 시 원본 반환
+      }
+
+      // 퍼센트 부분 파싱
+      const parsedPercentage = parseFloat(parts[1]);
+      if (!isNaN(parsedPercentage)) {
+        percentagePart = parsedPercentage;
+      } else {
+        console.warn("calculateScore: 퍼센트 부분을 파싱할 수 없습니다.", parts[1]);
+        return scoreString; // 파싱 실패 시 원본 반환
+      }
+
+    } else {
+      console.warn("calculateScore: '초'로 문자열을 올바르게 분리할 수 없습니다.", scoreString);
+      return scoreString; // 분리 실패 시 원본 반환
+    }
+
+    let finalScore = 0;
+
+    // 3. 초(시간) 점수 계산
+    if (timePart <= 60) {
+      finalScore += (60 - timePart);
+    }
+    // else if (timePart > 60) { // 60초를 넘으면 0점이므로 else 문에 별도 처리 필요 없음
+    //    finalScore += 0;
+    // }
+
+    // 4. 퍼센트 점수 계산 (0%가 50점 만점, 100%가 0점)
+    // 퍼센트가 0일 때 50점, 100일 때 0점, 선형적인 관계
+    // y = ax + b (x: percentagePart, y: score)
+    // (0, 50), (100, 0)
+    // 50 = a*0 + b => b = 50
+    // 0 = a*100 + 50 => 100a = -50 => a = -0.5
+    // score = -0.5 * percentagePart + 50
+    finalScore += (-0.5 * percentagePart) + 50;
+
+    // 최종 점수 반환
+    return String(finalScore);
+  };
+
   getCurrentRanking = async () => {
+
+    //console.log("test 계산:"+this.calculateScore("36.5초 0%"));
     const isAdmin = this.props.path == "/ranking/admin/";
     try {
       $.ajax({
@@ -661,7 +730,7 @@ class App extends React.Component {
                       if (index === 2) return acc + parseInt(curr) / 100; // Milliseconds to seconds
                       return acc;
                     }, 0)
-                  : parseInt(ranking_score);
+                  : parseInt(this.calculateScore(ranking_score));
 
                 let existingEntryIndex = result.findIndex(
                   (e) => e.ranking_school_sc === ranking_school_sc
@@ -678,7 +747,7 @@ class App extends React.Component {
                           if (index === 2) return acc + parseInt(curr) / 100; // Milliseconds to seconds
                           return acc;
                         }, 0)
-                    : parseInt(existingEntry.ranking_score);
+                    : parseInt(this.calculateScore(existingEntry.ranking_score));
 
                   if (
                     (isTimeScore &&
@@ -721,13 +790,15 @@ class App extends React.Component {
                   return timeA - timeB;
                 } else {
                   return (
-                    parseFloat(b.ranking_score) - parseFloat(a.ranking_score)
+                    parseFloat(this.calculateScore(b.ranking_score)) - parseFloat(this.calculateScore(a.ranking_score))
                   );
                 }
               });
 
               categorizedData[ap_sn] = result;
             });
+
+            
             /*
             Object.keys(schoolCategorizedData).forEach((school_sc) => {
               schoolCategorizedData[school_sc].sort(
@@ -1116,8 +1187,12 @@ class App extends React.Component {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems =  this.state.activeTab === 'approved' ? 
           filteredRanking.slice(indexOfFirstItem, indexOfLastItem) :
-          filteredPending.slice(indexOfFirstItem,indexOfLastItem);
-         
+          filteredPending.slice(indexOfFirstItem, indexOfLastItem);
+    const currentTotalSize = this.state.activeTab === 'approved' ?
+          filteredRanking.length :
+          filteredPending.length;
+    console.log("selectedApName:"+selectedApName); 
+    console.log("total size:"+currentTotalSize);
     return (
       <div id="ranking-main">
         <div className="ranking-container">
@@ -1348,7 +1423,7 @@ class App extends React.Component {
           <this.Pagination
           currentPage={currentPage}
           pageSize={itemsPerPage}
-          totalElements={filteredRanking.length} // Use the length of filtered data
+          totalElements={currentTotalSize} // Use the length of filtered data
           onPageChange={this.handlePageChange}
         />
         </div>

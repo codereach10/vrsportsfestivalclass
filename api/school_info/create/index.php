@@ -13,8 +13,9 @@
 	$school_host = $_POST["school_host"];
 	$school_sc_code = $_POST["school_sc_code"];
 	$school_name = $_POST["school_name"];
+	$school_group = $_POST["school_group"];
 	header('Content-Type: application/json; charset=utf-8');
-	if( !isset($school_sc_code) || !isset($school_name) ) {
+	if( !isset($school_sc_code) || !isset($school_name) || !isset($school_group) ) {
 		$ret = array("code" => ERR_PARAMS_EMPTY, "message" => "Parameters not set ");
 		echo json_encode($ret);
 		exit;
@@ -40,8 +41,8 @@ if ($count > 0) {
     $ret = ["code" => FAILURE , "message" => "이미 사용 중인 학교 코드입니다."];
 } else {
 	$sql ="INSERT INTO school_info";
-	$sql .=" (school_host, school_sc_code, school_name) VALUES";
-	$sql .=" ('".$school_host."','".$school_sc_code."','".$school_name."')";
+	$sql .=" (school_host, school_sc_code, school_name , school_group ) VALUES";
+	$sql .=" ('".$school_host."','".$school_sc_code."','".$school_name."','".$school_group."')";
 
 	$Rs = OpenRecordset($Rs, $sql);
 	

@@ -28,6 +28,7 @@ while ($Rs->NextRow()) {
     $data['school_host'] = $Rs->Col('school_host');
     $data['school_sc_code'] = $Rs->Col('school_sc_code');
     $data['school_name'] = $Rs->Col('school_name');
+    $data['school_group'] = $Rs->Col('school_group');
 
     array_push($school, $data);
 }

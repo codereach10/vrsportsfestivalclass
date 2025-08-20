@@ -590,13 +590,13 @@ dropdown-menu form-search {
     const { current } = this.props;
     const rowToDelete = current[idx];
 
-    const { contest_id, school_id, school_pid, seq , ap_sn } = rowToDelete;
+    const { contest_id, school_id, school_pid, seq , ap_sn, gs_uid} = rowToDelete;
 
     this.setState({
       showDeletePopup: true,
       deleteRowIndex: idx,
       deleteContestId: contest_id,
-      deleteSchoolId: school_id|school_pid,
+      deleteSchoolId: school_id|school_pid|gs_uid,
       deleteAdminId: seq,
       deleteContentId: ap_sn
     });
@@ -773,19 +773,22 @@ function formatDate(value, timezoneOffset = 0) {
 
   const adjustedDate = new Date(
     date.getTime() + timezoneOffset * 60 * 60 * 1000
+   
   );
 
   // Format date components
   const formattedDate = formatDateComponents(adjustedDate);
   return formattedDate;
 }
-
+// 시간 
 function formatDateComponents(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  //const hours = String(date.getUTCHours()).padStart(2, "0");
+  //const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
@@ -922,7 +925,7 @@ const renderFormElement = (
         </div>
       );
     default:
-      const isDisabled = key === "contest_id" || key === "gs_uid" || key === "admin_id" || key === "seq" || key === "id" || key === "school_pid" || key === "school_sc_code" || key === "ap_sn" || key === "parent_ap_sn";
+      const isDisabled = key === "contest_id" || key === "gs_uid" || key === "admin_id" || key === "seq" || key === "id" || key === "school_pid" || key === "school_sc_code" || key === "parent_ap_sn";
       return (
         <div key={idx} className="form-element">
           <label className="required">{key}</label>

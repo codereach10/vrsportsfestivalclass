@@ -32,13 +32,14 @@ $Rs = CreateRecordset();
 $ret = array("code" => SUCCESS, "message" => "OK", "ap_intro" => $ap_intro, "ap_sn" => $ap_sn);
 
 $sql = "UPDATE content_info SET ";
+$sql .= "ap_sn = '" . $ap_sn . "', ";
 $sql .= "parent_ap_sn = '" . $parent_ap_sn . "', ";
 $sql .= "ap_name = '" . $ap_name . "', ";
 $sql .= "ap_intro = '" . $ap_intro . "', ";
 $sql .= "ap_guide = '" . $ap_guide . "', ";
 $sql .= "ap_rule = '" . $ap_rule . "' ";
-$sql .= "WHERE ap_sn= '" . $ap_sn . "';";
-
+//$sql .= "WHERE ap_sn= '" . $ap_sn . "';";
+$sql .= "WHERE parent_ap_sn= '" . $parent_ap_sn . "';";
 $Rs = OpenRecordset($Rs, $sql);
 
 echo json_encode($ret);
